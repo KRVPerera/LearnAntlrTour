@@ -1,0 +1,75 @@
+group 'com.krv.tour'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'antlr'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+
+application {
+    mainClassName = 'com.krv.tour.TestArrayInitParser'
+}
+
+configurations {
+    antlr
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    antlr "org.antlr:antlr4:4.5" // use ANTLR version 4
+    compile "org.antlr:antlr4-runtime:4.5.1"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+}
+
+//task('generateLang', type: JavaExec) {
+//    // only one grammar, but could do more or all in folder, as configured
+//    def rootProjectNameSpace = rootProject.properties["rootProjectNameSpace"]
+//    def rootProjectNameSpaceDir = rootProjectNameSpace.replaceAll("\\.","/")
+//    def gn = rootProject.properties["rootProjectGrammarName"]
+//    def g4FileName = "${gn}.g4"
+//
+//    inputs.file new File(g4FileName)
+//    outputs.dir new File("src/main/java/$rootProjectNameSpaceDir/$rootProject.name/")
+//
+//    classpath configurations.antlr
+//
+//    workingDir = new File('src/main/antlr/$rootProjectNameSpaceDir')
+//
+//    main = 'org.antlr.v4.Tool'
+//    args = ['-package', "$rootProjectNameSpace.${rootProject.name}.${rootProject.properties["rootProjectGrammarName"]}",
+//            '-o', "../java/$rootProjectNameSpaceDir/$rootProject.name/lang/$gn",
+//            g4FileName]
+//}
+
+task('cleanLang', type: Delete) {
+    // cleans only the targeted grammar folder
+    def gn = rootProject.properties["rootProjectGrammarName"]
+    def rootProjectNameSpaceDir = rootProject.properties["rootProjectNameSpace"].replaceAll("\\.","/")
+    delete fileTree(dir: "src/main/java/$rootProjectNameSpaceDir/$rootProject.name/lang/$gn")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+clean.dependsOn 'cleanLang'
+//build.dependsOn 'generateLang'
+
+generateGrammarSource {
+    def rootProjectNameSpace = rootProject.properties["rootProjectNameSpace"]
+    def rootProjectNameSpaceDir = rootProjectNameSpace.replaceAll("\\.","/")
+    def commonParserLibPath = "src/main/antlr/$rootProjectNameSpaceDir"
+    arguments << "-lib" << commonParserLibPath.toString()
+}
